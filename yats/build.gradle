@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt'
+
+repositories {
+    maven { url "http://dl.bintray.com/tbruyelle/tbruyelle" }
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "com.github.cjnosal.yats"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+
+        buildConfigField 'String', 'ATTRIBUTION',  '"' + System.getenv("YATS_ATTRIBUTION") + '"'
+        buildConfigField 'String', 'OAUTH_CLIENT_ID', '"' + System.getenv("YATS_OAUTH_CLIENT_ID") + '"'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Support Libraries
+    compile 'com.android.support:support-annotations:23.2.1'
+
+    compile 'com.android.support:support-v4:23.2.1'
+    compile 'com.android.support:support-v13:23.2.1'
+    compile 'com.android.support:appcompat-v7:23.2.1'
+
+    compile 'com.android.support:customtabs:23.2.1'
+    compile 'com.android.support:design:23.2.1'
+
+    compile 'com.android.support:percent:23.2.1'
+    compile 'com.android.support:cardview-v7:23.2.1'
+    compile 'com.android.support:gridlayout-v7:23.2.1'
+    compile 'com.android.support:palette-v7:23.2.1'
+    compile 'com.android.support:recyclerview-v7:23.2.1'
+
+    compile 'com.android.support:preference-v7:23.2.1'
+    compile 'com.android.support:preference-v14:23.2.1'
+
+    // Dependency Injection - Dagger
+    apt "com.google.dagger:dagger-compiler:2.0.1"
+    compile 'com.google.dagger:dagger:2.0.1'
+    compile 'javax.annotation:jsr250-api:1.0'
+
+    // Networking - OkHttp
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
+
+    // Networking - Retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.0.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.0'
+    compile 'com.squareup.retrofit2:converter-scalars:2.0.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.0.0'
+
+    // Images - Picasso
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
+
+    // View Binding - Butterknife
+    compile 'com.jakewharton:butterknife:7.0.1'
+
+    // Reactive Architecture - RxJava
+    compile 'io.reactivex:rxjava:1.1.1'
+    compile 'io.reactivex:rxandroid:1.1.0'
+    compile 'com.jakewharton.rxbinding:rxbinding:0.4.0'
+    compile 'com.jakewharton.rxbinding:rxbinding:0.4.0'
+    compile 'com.jakewharton.rxbinding:rxbinding-appcompat-v7:0.4.0'
+    compile 'com.jakewharton.rxbinding:rxbinding-design:0.4.0'
+    compile 'com.jakewharton.rxbinding:rxbinding-recyclerview-v7:0.4.0'
+    compile 'com.tbruyelle.rxpermissions:rxpermissions:0.5.0@aar'
+    compile 'com.f2prateek.rx.preferences:rx-preferences:1.0.1'
+    compile 'com.trello:rxlifecycle:0.5.0'
+    compile 'com.trello:rxlifecycle-components:0.5.0'
+
+    // Logging - Timber
+    compile 'com.jakewharton.timber:timber:4.1.1'
+
+    // Unit Tests - JUnit
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.android.support:support-annotations:23.2.1'
+
+    // Integration Tests - Espresso
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.1'
+    androidTestCompile 'com.android.support:support-annotations:23.2.1'
+}
+
+

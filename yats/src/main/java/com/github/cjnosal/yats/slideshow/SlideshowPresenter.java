@@ -15,9 +15,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import okhttp3.Headers;
+import retrofit2.Response;
 import retrofit2.http.Url;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func0;
 import rx.functions.Func1;
 import timber.log.Timber;
 
@@ -40,34 +43,27 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
 
         String query = getTimeQuery();
 
-        Observable<List<String>> observable = redditService.searchSubReddit(DEFAULT_SUB, NUM_IMAGES, query)
-                .map(new Func1<SubredditSearchResponse, List<Child>>() {
+        Observable<List<String>> urlsObservable = redditService.searchSubReddit(DEFAULT_SUB, NUM_IMAGES, query)
+                .flatMap(new Func1<SubredditSearchResponse, Observable<String>>() {
                     @Override
-                    public List<Child> call(SubredditSearchResponse subredditSearchResponse) {
-                        return subredditSearchResponse.data.children;
-                    }
-                })
-                .map(new Func1<List<Child>, List<String>>() {
-                    @Override
-                    public List<String> call(List<Child> children) {
-                        // TODO flatmap/filter observables
-                        List<String> urls = new ArrayList<String>(25);
-                        for (Child child : children) {
+                    public Observable<String> call(SubredditSearchResponse subredditSearchResponse) {
+                        List<String> urls = new ArrayList<String>(subredditSearchResponse.data.children.size());
+                        for (Child child : subredditSearchResponse.data.children) {
                             String url = child.data.url;
                             if (!TextUtils.isEmpty(url)) {
-
-                                // TODO more extensions, check data.media.url
                                 boolean directLink = url.endsWith("png") || url.endsWith("jpg");
                                 if (directLink) {
+                                    Timber.d(url);
                                     urls.add(url);
                                 }
                             }
                         }
-                        return urls;
+                        return Observable.from(urls);
                     }
-                });
+                })
+                .toList();
 
-        RxUtils.subscribeIO(observable, new Subscriber<List<String>>() {
+        RxUtils.subscribeIO(urlsObservable, new Subscriber<List<String>>() {
             @Override
             public void onCompleted() {
                 Timber.d("onCompleted");
@@ -81,10 +77,6 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
             @Override
             public void onNext(List<String> urls) {
                 Timber.d("onNext");
-
-                for (String url : urls) {
-                    Timber.d(url);
-                }
                 view.displayImages(urls);
             }
         });

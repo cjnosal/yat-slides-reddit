@@ -1,10 +1,7 @@
 package com.github.cjnosal.yats.slideshow;
 
 import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.View;
-import android.widget.ImageView;
 
 import com.github.cjnosal.yats.R;
 import com.github.cjnosal.yats.YATSApplication;
@@ -13,9 +10,9 @@ import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.services.RedditService;
 import com.github.cjnosal.yats.slideshow.modules.DaggerSlideshowComponent;
 import com.github.cjnosal.yats.slideshow.modules.SlideshowComponent;
-import com.squareup.picasso.Picasso;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -24,6 +21,9 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class SlideshowActivity extends RxAppCompatActivity implements SlideshowContract.View {
+
+    public static final String CURRENT_SLIDE = "current_slide";
+    public static final String SLIDES = "slides";
 
     @Bind(R.id.slide_pager)
     ViewPager slidePager;
@@ -70,7 +70,12 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         });
 
         listener = new SlideshowPresenter(redditService, authManager, this);
-        listener.fetchImages();
+        if (savedInstanceState != null) {
+            adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
+            slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
+        } else {
+            listener.fetchImages();
+        }
     }
 
     @Override
@@ -78,5 +83,12 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         List<String> adapterImages = adapter.getImages();
         adapterImages.addAll(urls);
         adapter.setImages(adapterImages);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(CURRENT_SLIDE, slidePager.getCurrentItem());
+        outState.putStringArrayList(SLIDES, new ArrayList<>(adapter.getImages()));
     }
 }

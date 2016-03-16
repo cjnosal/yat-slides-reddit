@@ -55,6 +55,8 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
                                 if (directLink) {
                                     Timber.d(url);
                                     urls.add(url);
+                                } else {
+                                    Timber.d("Skipping %s", url);
                                 }
                             }
                         }

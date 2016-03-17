@@ -15,6 +15,8 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -23,6 +25,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import okhttp3.Cache;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,7 +42,7 @@ public class ApplicationModule {
 
     private static final int NETWORK_TIMEOUT = 15; // seconds
     private static final String OKHTTP = "OkHttp";
-    private static final int CACHE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final int CACHE_SIZE = 25 * 1024 * 1024; // 25MB
     private static final String BASE_CONTENT_URL = "https://oauth.reddit.com";
     private static final String BASE_AUTH_URL = "https://www.reddit.com";
     private static final String PREFERENCES_FILE = "prefs";
@@ -78,7 +81,7 @@ public class ApplicationModule {
                 Timber.tag(OKHTTP).d(message);
             }
         });
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
         return interceptor;
     }
 
@@ -88,11 +91,40 @@ public class ApplicationModule {
     public Interceptor providesUserAgentInterceptor() {
         return new Interceptor() {
             private final String userAgent = "android:" + BuildConfig.APPLICATION_ID + ":" + BuildConfig.VERSION_NAME + " (" + BuildConfig.ATTRIBUTION + ")";
+
             @Override
             public Response intercept(Chain chain) throws IOException {
 
                 Request request = chain.request().newBuilder().addHeader("User-Agent", userAgent).build();
                 return chain.proceed(request);
+            }
+        };
+    }
+
+    @Singleton
+    @Provides
+    @Named("BlackList")
+    public Interceptor providesBlackListInterceptor() {
+        return new Interceptor() {
+            private final List<String> removedImages = Arrays.asList(
+                    "i.imgur.com/removed.png",
+                    "s.yimg.com/pw/images/en-us/photo_unavailable_l.png"
+            );
+
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+
+                Response response = chain.proceed(chain.request());
+                HttpUrl url = response.request().url();
+                Timber.d("Loaded %s", url);
+
+                for (String blacklistedUrl : removedImages) {
+                    if (String.format("%s%s", url.host(), url.encodedPath()).equals(blacklistedUrl)) {
+                        return response.newBuilder().code(410).message("Blacklisted").build();
+                    }
+                }
+
+                return response;
             }
         };
     }
@@ -109,8 +141,12 @@ public class ApplicationModule {
 
     @Singleton
     @Provides
-    public OkHttpClient providesOkHttpClient(Cache cache, @Named("Logger") Interceptor loggingInterceptor, @Named("UserAgent") Interceptor userAgentInterceptor) {
+    public OkHttpClient providesOkHttpClient(Cache cache,
+                                             @Named("Logger") Interceptor loggingInterceptor,
+                                             @Named("UserAgent") Interceptor userAgentInterceptor,
+                                             @Named("BlackList") Interceptor blackListInterceptor) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .addInterceptor(blackListInterceptor)
                 .addNetworkInterceptor(userAgentInterceptor)
                 .addNetworkInterceptor(loggingInterceptor)
                 .cache(cache)
@@ -155,8 +191,8 @@ public class ApplicationModule {
     @Singleton
     @Provides
     public Picasso providesPicasso(OkHttpClient client) {
-        return new Picasso.Builder(applicationContext)
-                .loggingEnabled(true)
+        Picasso picasso = new Picasso.Builder(applicationContext)
+                .loggingEnabled(false)
                 .downloader(new OkHttp3Downloader(client))
                 .listener(new Picasso.Listener() {
                     @Override
@@ -165,5 +201,7 @@ public class ApplicationModule {
                     }
                 })
                 .build();
+        Picasso.setSingletonInstance(picasso);
+        return picasso;
     }
 }

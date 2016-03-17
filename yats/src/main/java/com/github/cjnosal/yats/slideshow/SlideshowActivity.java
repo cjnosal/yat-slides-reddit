@@ -19,6 +19,7 @@ import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import timber.log.Timber;
 
 public class SlideshowActivity extends RxAppCompatActivity implements SlideshowContract.View {
 
@@ -49,6 +50,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
         adapter = new SlideAdapter();
         slidePager.setAdapter(adapter);
+        slidePager.setOffscreenPageLimit(4);
 
         slidePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -58,8 +60,9 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
             @Override
             public void onPageSelected(int position) {
-                if (position > (adapter.getCount() - 3)) {
-                    listener.fetchUrls(); // FIXME fetch next 10 images
+                Timber.d("Display %s", adapter.getImages().get(position));
+                if (position == (adapter.getCount() - 3)) {
+                    listener.fetchUrls();
                 }
             }
 

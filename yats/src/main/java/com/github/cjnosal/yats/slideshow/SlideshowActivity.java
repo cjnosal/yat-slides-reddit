@@ -49,6 +49,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         slideshowComponent.inject(this);
 
         adapter = new SlideAdapter();
+        slideshowComponent.inject(adapter);
         slidePager.setAdapter(adapter);
         slidePager.setOffscreenPageLimit(4);
 
@@ -72,7 +73,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             }
         });
 
-        listener = new SlideshowPresenter(redditService, authManager, this);
+        listener = new SlideshowPresenter(redditService, authManager, this, savedInstanceState);
         if (savedInstanceState != null) {
             adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
@@ -93,5 +94,6 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         super.onSaveInstanceState(outState);
         outState.putInt(CURRENT_SLIDE, slidePager.getCurrentItem());
         outState.putStringArrayList(SLIDES, new ArrayList<>(adapter.getImages()));
+        listener.onSaveInstanceState(outState);
     }
 }

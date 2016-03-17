@@ -8,12 +8,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.github.cjnosal.yats.R;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class SlideAdapter extends PagerAdapter {
+
+    @Inject
+    Picasso picasso;
 
     private List<String> urls = new LinkedList<>();
 
@@ -43,8 +49,18 @@ public class SlideAdapter extends PagerAdapter {
                 (Context.LAYOUT_INFLATER_SERVICE);
         ImageView view = (ImageView) inflater.inflate(R.layout.view_slide, container, false);
         container.addView(view);
-        String url = urls.get(position);
-        Picasso.with(context).load(url).into(view);
+        final String url = urls.get(position);
+        picasso.load(url).fit().centerInside().into(view, new Callback() {
+            @Override
+            public void onSuccess() {
+            }
+
+            @Override
+            public void onError() {
+                urls.remove(url);
+                notifyDataSetChanged();
+            }
+        });
         return view;
     }
 

@@ -1,5 +1,6 @@
 package com.github.cjnosal.yats.slideshow;
 
+import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.github.cjnosal.yats.network.AuthManager;
@@ -22,15 +23,22 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
 
     private static final String DEFAULT_SUB = "pics";
     private static final int NUM_IMAGES = 10;
+    private static final String LAST_IMAGE = "last_image";
 
     RedditContentService redditService;
     AuthManager authManager;
     SlideshowContract.View view;
 
-    public SlideshowPresenter(RedditContentService redditService, AuthManager authManager, SlideshowContract.View view) {
+    String lastImage;
+
+    public SlideshowPresenter(RedditContentService redditService, AuthManager authManager, SlideshowContract.View view, Bundle bundle) {
         this.redditService = redditService;
         this.authManager = authManager;
         this.view = view;
+
+        if (bundle != null) {
+            lastImage = bundle.getString(LAST_IMAGE);
+        }
     }
 
     public void fetchUrls() {
@@ -55,8 +63,12 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
         }
     }
 
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(LAST_IMAGE, lastImage);
+    }
+
     private void searchImages() {
-        Observable<List<String>> urlsObservable = redditService.searchSubReddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getTimeQuery())
+        Observable<List<String>> urlsObservable = redditService.searchSubreddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getTimeQuery(), lastImage)
                 .flatMap(new Func1<SubredditSearchResponse, Observable<String>>() {
                     @Override
                     public Observable<String> call(SubredditSearchResponse subredditSearchResponse) {
@@ -73,6 +85,7 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
                                 }
                             }
                         }
+                        lastImage = subredditSearchResponse.data.after;
                         return Observable.from(urls);
                     }
                 })

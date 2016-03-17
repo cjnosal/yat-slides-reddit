@@ -11,6 +11,11 @@ import rx.Observable;
 public interface RedditContentService {
 
     @GET("/r/{subreddit}/search.json?syntax=cloudsearch&sort=top&restrict_sr=on&show=all")
-    Observable<SubredditSearchResponse> searchSubReddit(@Header("Authorization") String authHeader, @Path("subreddit") String subreddit, @Query("limit") int limit, @Query("q") String search);
+    Observable<SubredditSearchResponse> searchSubreddit(
+            @Header("Authorization") String authHeader,
+            @Path("subreddit") String subreddit,
+            @Query("limit") int limit,
+            @Query("q") String search,
+            @Query("after") String after);
 
 }

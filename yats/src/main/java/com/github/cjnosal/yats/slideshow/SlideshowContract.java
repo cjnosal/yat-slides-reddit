@@ -1,5 +1,7 @@
 package com.github.cjnosal.yats.slideshow;
 
+import android.os.Bundle;
+
 import java.util.List;
 
 public class SlideshowContract {
@@ -10,6 +12,7 @@ public class SlideshowContract {
 
     public interface UserActionListener {
         void fetchUrls();
+        void onSaveInstanceState(Bundle outState);
     }
 
 }

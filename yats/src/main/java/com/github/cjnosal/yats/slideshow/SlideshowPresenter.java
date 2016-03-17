@@ -6,21 +6,15 @@ import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.models.AuthResponse;
 import com.github.cjnosal.yats.network.models.subreddit.Child;
 import com.github.cjnosal.yats.network.models.subreddit.SubredditSearchResponse;
-import com.github.cjnosal.yats.network.services.RedditService;
+import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.github.cjnosal.yats.rxjava.RxUtils;
 
-import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import okhttp3.Headers;
-import retrofit2.Response;
-import retrofit2.http.Url;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Func0;
 import rx.functions.Func1;
 import timber.log.Timber;
 
@@ -29,21 +23,40 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
     private static final String DEFAULT_SUB = "pics";
     private static final int NUM_IMAGES = 10;
 
-    RedditService redditService;
+    RedditContentService redditService;
     AuthManager authManager;
     SlideshowContract.View view;
 
-    public SlideshowPresenter(RedditService redditService, AuthManager authManager, SlideshowContract.View view) {
+    public SlideshowPresenter(RedditContentService redditService, AuthManager authManager, SlideshowContract.View view) {
         this.redditService = redditService;
         this.authManager = authManager;
         this.view = view;
     }
 
-    public void fetchImages() {
+    public void fetchUrls() {
+        if (authManager.isAuthenticated()) {
+            searchImages();
+        } else {
+            Observable<AuthResponse> authResponseObservable = authManager.fetchAuthToken();
+            RxUtils.subscribeIO(authResponseObservable, new Subscriber<AuthResponse>() {
+                @Override
+                public void onCompleted() {
+                }
 
-        String query = getTimeQuery();
+                @Override
+                public void onError(Throwable e) {
+                }
 
-        Observable<List<String>> urlsObservable = redditService.searchSubReddit(DEFAULT_SUB, NUM_IMAGES, query)
+                @Override
+                public void onNext(AuthResponse authResponse) {
+                    searchImages();
+                }
+            });
+        }
+    }
+
+    private void searchImages() {
+        Observable<List<String>> urlsObservable = redditService.searchSubReddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getTimeQuery())
                 .flatMap(new Func1<SubredditSearchResponse, Observable<String>>() {
                     @Override
                     public Observable<String> call(SubredditSearchResponse subredditSearchResponse) {

@@ -4,7 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.github.cjnosal.yats.network.AuthManager;
-import com.github.cjnosal.yats.network.services.RedditService;
+import com.github.cjnosal.yats.network.services.RedditAuthService;
+import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.squareup.picasso.Picasso;
 
 import javax.inject.Singleton;
@@ -15,7 +16,8 @@ import dagger.Component;
 @Component(modules = ApplicationModule.class)
 public interface ApplicationComponent extends ApplicationInjector {
     Context applicationContext();
-    RedditService redditService();
+    RedditContentService redditContentService();
+    RedditAuthService redditAuthService();
     SharedPreferences sharedPreferences();
     AuthManager authManager();
     Picasso picasso();

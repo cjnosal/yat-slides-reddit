@@ -9,7 +9,7 @@ public class SlideshowContract {
     }
 
     public interface UserActionListener {
-        void fetchImages();
+        void fetchUrls();
     }
 
 }

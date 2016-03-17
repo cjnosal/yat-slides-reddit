@@ -7,7 +7,7 @@ import com.github.cjnosal.yats.R;
 import com.github.cjnosal.yats.YATSApplication;
 import com.github.cjnosal.yats.modules.ApplicationComponent;
 import com.github.cjnosal.yats.network.AuthManager;
-import com.github.cjnosal.yats.network.services.RedditService;
+import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.github.cjnosal.yats.slideshow.modules.DaggerSlideshowComponent;
 import com.github.cjnosal.yats.slideshow.modules.SlideshowComponent;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
@@ -29,7 +29,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     ViewPager slidePager;
 
     @Inject
-    RedditService redditService;
+    RedditContentService redditService;
 
     @Inject
     AuthManager authManager;
@@ -59,7 +59,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             @Override
             public void onPageSelected(int position) {
                 if (position > (adapter.getCount() - 3)) {
-                    listener.fetchImages(); // FIXME fetch next 10 images
+                    listener.fetchUrls(); // FIXME fetch next 10 images
                 }
             }
 
@@ -74,7 +74,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
         } else {
-            listener.fetchImages();
+            listener.fetchUrls();
         }
     }
 

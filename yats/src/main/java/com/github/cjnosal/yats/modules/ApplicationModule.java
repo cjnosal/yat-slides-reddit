@@ -6,7 +6,8 @@ import android.net.Uri;
 
 import com.github.cjnosal.yats.BuildConfig;
 import com.github.cjnosal.yats.network.AuthManager;
-import com.github.cjnosal.yats.network.services.RedditService;
+import com.github.cjnosal.yats.network.services.RedditAuthService;
+import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jakewharton.picasso.OkHttp3Downloader;
@@ -17,7 +18,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
-import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -40,7 +40,8 @@ public class ApplicationModule {
     private static final int NETWORK_TIMEOUT = 15; // seconds
     private static final String OKHTTP = "OkHttp";
     private static final int CACHE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final String BASE_URL = "https://www.reddit.com";
+    private static final String BASE_CONTENT_URL = "https://oauth.reddit.com";
+    private static final String BASE_AUTH_URL = "https://www.reddit.com";
     private static final String PREFERENCES_FILE = "prefs";
 
     private Context applicationContext;
@@ -63,7 +64,7 @@ public class ApplicationModule {
 
     @Provides
     @Singleton
-    AuthManager providesAuthManager(RedditService redditService, SharedPreferences sharedPreferences) {
+    AuthManager providesAuthManager(RedditAuthService redditService, SharedPreferences sharedPreferences) {
         return new AuthManager(redditService, sharedPreferences);
     }
 
@@ -139,9 +140,16 @@ public class ApplicationModule {
 
     @Singleton
     @Provides
-    public RedditService providesRedditService(Retrofit.Builder builder) {
-        Retrofit retrofit = builder.baseUrl(BASE_URL).build();
-        return retrofit.create(RedditService.class);
+    public RedditContentService providesRedditContentService(Retrofit.Builder builder) {
+        Retrofit retrofit = builder.baseUrl(BASE_CONTENT_URL).build();
+        return retrofit.create(RedditContentService.class);
+    }
+
+    @Singleton
+    @Provides
+    public RedditAuthService providesRedditAuthService(Retrofit.Builder builder) {
+        Retrofit retrofit = builder.baseUrl(BASE_AUTH_URL).build();
+        return retrofit.create(RedditAuthService.class);
     }
 
     @Singleton

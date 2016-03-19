@@ -39,7 +39,7 @@ public class SlideAdapter extends PagerAdapter {
 
     @Override
     public boolean isViewFromObject(View view, Object object) {
-        return view == object;
+        return ((ViewHolder)object).getView() == view;
     }
 
     @Override
@@ -61,16 +61,58 @@ public class SlideAdapter extends PagerAdapter {
                 notifyDataSetChanged();
             }
         });
-        return view;
+        return new ViewHolder(url, view, position);
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        container.removeView((ImageView)object);
+        container.removeView(((ViewHolder)object).getView());
+    }
+
+    @Override
+    public int getItemPosition(Object object) {
+        ViewHolder v = (ViewHolder)object;
+        int index = urls.indexOf(v.getUrl());
+        if (index == -1) {
+            return POSITION_NONE;
+        } else if (index == v.getPosition()) {
+            return POSITION_UNCHANGED;
+        } else {
+            v.setPosition(index);
+            return index;
+        }
     }
 
     // TODO post title
     public CharSequence getPageTitle(int position) {
         return null;
+    }
+
+    private class ViewHolder {
+        private String url;
+        private View view;
+        private int position;
+
+        public ViewHolder(String url, View view, int position) {
+            this.url = url;
+            this.view = view;
+            this.position = position;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public View getView() {
+            return view;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+
+        public void setPosition(int position) {
+            this.position = position;
+        }
     }
 }

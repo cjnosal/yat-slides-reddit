@@ -1,7 +1,10 @@
 package com.github.cjnosal.yats.slideshow;
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
+import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
+import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,8 +14,10 @@ import com.github.cjnosal.yats.R;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -22,6 +27,16 @@ public class SlideAdapter extends PagerAdapter {
     Picasso picasso;
 
     private List<String> urls = new LinkedList<>();
+    private Map<String, Palette> paletteMap = new HashMap<>();
+    private Listener listener;
+
+    public SlideAdapter() {
+        this(null);
+    }
+
+    public SlideAdapter(@Nullable Listener listener) {
+        this.listener = listener;
+    }
 
     public void setImages(List<String> urls) {
         this.urls = urls;
@@ -30,6 +45,14 @@ public class SlideAdapter extends PagerAdapter {
 
     public List<String> getImages() {
         return urls;
+    }
+
+    public Palette getPalette(int position) {
+        if (position >= urls.size()) {
+            return null;
+        }
+        String url = urls.get(position);
+        return paletteMap.get(url);
     }
 
     @Override
@@ -47,18 +70,30 @@ public class SlideAdapter extends PagerAdapter {
         Context context = container.getContext();
         LayoutInflater inflater = (LayoutInflater)context.getSystemService
                 (Context.LAYOUT_INFLATER_SERVICE);
-        ImageView view = (ImageView) inflater.inflate(R.layout.view_slide, container, false);
+        final ImageView view = (ImageView) inflater.inflate(R.layout.view_slide, container, false);
         container.addView(view);
         final String url = urls.get(position);
         picasso.load(url).fit().centerInside().into(view, new Callback() {
             @Override
             public void onSuccess() {
+                Palette.from(((BitmapDrawable)view.getDrawable()).getBitmap()).generate(new Palette.PaletteAsyncListener() {
+                    @Override
+                    public void onGenerated(Palette palette) {
+                        paletteMap.put(url, palette);
+                        if (listener != null) {
+                            listener.onImageLoaded();
+                        }
+                    }
+                });
             }
 
             @Override
             public void onError() {
                 urls.remove(url);
                 notifyDataSetChanged();
+                if (listener != null) {
+                    listener.onImageFailed();
+                }
             }
         });
         return new ViewHolder(url, view, position);
@@ -114,5 +149,10 @@ public class SlideAdapter extends PagerAdapter {
         public void setPosition(int position) {
             this.position = position;
         }
+    }
+
+    public interface Listener {
+        void onImageLoaded();
+        void onImageFailed();
     }
 }

@@ -1,7 +1,12 @@
 package com.github.cjnosal.yats.slideshow;
 
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
+import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.ViewPager;
+import android.support.v7.graphics.Palette;
+import android.util.TypedValue;
 
 import com.github.cjnosal.yats.R;
 import com.github.cjnosal.yats.YATSApplication;
@@ -38,6 +43,9 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     SlideshowContract.UserActionListener listener;
     SlideAdapter adapter;
 
+    int slidePosition = 0;
+    float slideOffset = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +56,16 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         SlideshowComponent slideshowComponent = DaggerSlideshowComponent.builder().applicationComponent(applicationComponent).build();
         slideshowComponent.inject(this);
 
-        adapter = new SlideAdapter();
+        adapter = new SlideAdapter(new SlideAdapter.Listener() {
+            @Override
+            public void onImageLoaded() {
+                setBackgroundColor();
+            }
+
+            @Override
+            public void onImageFailed() {
+            }
+        });
         slideshowComponent.inject(adapter);
         slidePager.setAdapter(adapter);
         slidePager.setOffscreenPageLimit(4);
@@ -56,12 +73,19 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         slidePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
+                slidePosition = position;
+                slideOffset = positionOffset;
+                setBackgroundColor();
             }
 
             @Override
             public void onPageSelected(int position) {
-                Timber.d("Display %s", adapter.getImages().get(position));
+                Timber.d("Display %s at position %d", adapter.getImages().get(position), position);
+
+                slidePosition = position;
+                slideOffset = 0;
+                setBackgroundColor();
+
                 if (position == (adapter.getCount() - 3)) {
                     listener.fetchUrls();
                 }
@@ -69,7 +93,6 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
             @Override
             public void onPageScrollStateChanged(int state) {
-
             }
         });
 
@@ -80,6 +103,25 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         } else {
             listener.fetchUrls();
         }
+    }
+
+    private void setBackgroundColor() {
+
+        Palette left = adapter.getPalette(slidePosition);
+        Palette right = adapter.getPalette(slidePosition + 1); // null for last slide
+
+        TypedValue a = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.colorBackground, a, true);
+
+        @ColorInt int backgroundColor = a.data;
+        if (left != null && right != null) {
+            @ColorInt int leftColor = left.getMutedColor(backgroundColor);
+            @ColorInt int rightColor = right.getMutedColor(backgroundColor);
+            backgroundColor = ColorUtils.blendARGB(leftColor, rightColor, slideOffset);
+        } else if (left != null) {
+            backgroundColor = left.getMutedColor(backgroundColor);
+        }
+        getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
     }
 
     @Override

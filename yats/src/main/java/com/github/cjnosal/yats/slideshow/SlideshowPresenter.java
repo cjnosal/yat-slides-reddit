@@ -5,7 +5,7 @@ import android.text.TextUtils;
 
 import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.models.AuthResponse;
-import com.github.cjnosal.yats.network.models.subreddit.Child;
+import com.github.cjnosal.yats.network.models.subreddit.Link;
 import com.github.cjnosal.yats.network.models.subreddit.SubredditSearchResponse;
 import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.github.cjnosal.yats.rxjava.RxUtils;
@@ -72,20 +72,19 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
                 .flatMap(new Func1<SubredditSearchResponse, Observable<String>>() {
                     @Override
                     public Observable<String> call(SubredditSearchResponse subredditSearchResponse) {
-                        List<String> urls = new ArrayList<String>(subredditSearchResponse.data.children.size());
-                        for (Child child : subredditSearchResponse.data.children) {
-                            String url = child.data.url;
+                        List<String> urls = new ArrayList<String>(subredditSearchResponse.getListingData().getLinks().size());
+                        for (Link link : subredditSearchResponse.getListingData().getLinks()) {
+                            String url = getImageLink(link);
                             if (!TextUtils.isEmpty(url)) {
-                                boolean directLink = url.endsWith("png") || url.endsWith("jpg");
-                                if (directLink) {
-                                    Timber.d(url);
-                                    urls.add(url);
-                                } else {
-                                    Timber.d("Skipping %s", url);
-                                }
+                                urls.add(url);
                             }
                         }
-                        lastImage = subredditSearchResponse.data.after;
+                        String after = subredditSearchResponse.getListingData().getAfter();
+                        if (TextUtils.isEmpty(after)) {
+                            lastImage = null;
+                        } else {
+                            lastImage = after;
+                        }
                         return Observable.from(urls);
                     }
                 })
@@ -108,6 +107,41 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
                 view.displayImages(urls);
             }
         });
+    }
+
+    private String getImageLink(Link link) {
+
+        String linkUrl = link.getData().getUrl();
+
+        String mediaUrl = null;
+        if (link.getData().getMedia() != null) {
+            mediaUrl = link.getData().getMedia().getOembed().getThumbnailUrl();
+        }
+
+        String previewUrl = null;
+        if (link.getData().getPreview() != null) {
+            previewUrl = link.getData().getPreview().getImages().get(0).getSource().getUrl();
+        }
+
+        String url = null;
+        if (hasImageExtension(linkUrl)) {
+            url = linkUrl;
+            Timber.d("Using link url  %s", url);
+        } else if (hasImageExtension(mediaUrl)) {
+            url = mediaUrl;
+            Timber.d("Using media url %s", url);
+        } else if (hasImageExtension(previewUrl)) {
+            url = previewUrl;
+            Timber.d("Using preview url %s", url);
+        } else {
+            Timber.d("Skipping %s", linkUrl);
+        }
+
+        return url;
+    }
+
+    private boolean hasImageExtension(String url) {
+        return !TextUtils.isEmpty(url) && (url.endsWith("png") || url.endsWith("jpg") || url.endsWith("jpeg"));
     }
 
     private String getTimeQuery() {

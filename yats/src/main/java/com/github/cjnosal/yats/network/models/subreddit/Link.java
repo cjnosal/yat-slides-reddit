@@ -7,14 +7,14 @@ import com.google.gson.annotations.SerializedName;
 import javax.annotation.Generated;
 
 @Generated("org.jsonschema2pojo")
-public class SubredditSearchResponse {
+public class Link {
 
     @SerializedName("kind")
     @Expose
     private String kind;
     @SerializedName("data")
     @Expose
-    private ListingData listingData;
+    private LinkData data;
 
     /**
      * 
@@ -37,19 +37,19 @@ public class SubredditSearchResponse {
     /**
      * 
      * @return
-     *     The listingData
+     *     The data
      */
-    public ListingData getListingData() {
-        return listingData;
+    public LinkData getData() {
+        return data;
     }
 
     /**
      * 
-     * @param listingData
-     *     The listingData
+     * @param data
+     *     The data
      */
-    public void setListingData(ListingData listingData) {
-        this.listingData = listingData;
+    public void setData(LinkData data) {
+        this.data = data;
     }
 
 }

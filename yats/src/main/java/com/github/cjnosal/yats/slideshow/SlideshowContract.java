@@ -11,6 +11,7 @@ public class SlideshowContract {
     }
 
     public interface UserActionListener {
+        void init(View view, Bundle bundle);
         boolean isLastPage();
         void fetchUrls();
         void onSaveInstanceState(Bundle outState);

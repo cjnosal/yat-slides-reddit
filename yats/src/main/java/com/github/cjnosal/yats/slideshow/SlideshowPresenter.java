@@ -28,14 +28,18 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
 
     RedditContentService redditService;
     AuthManager authManager;
+
     SlideshowContract.View view;
 
     boolean isLastPage = false;
     String lastImage = null;
 
-    public SlideshowPresenter(RedditContentService redditService, AuthManager authManager, SlideshowContract.View view, Bundle bundle) {
+    public SlideshowPresenter(RedditContentService redditService, AuthManager authManager) {
         this.redditService = redditService;
         this.authManager = authManager;
+    }
+
+    public void init(SlideshowContract.View view, Bundle bundle) {
         this.view = view;
 
         if (bundle != null) {

@@ -11,8 +11,6 @@ import android.util.TypedValue;
 import com.github.cjnosal.yats.R;
 import com.github.cjnosal.yats.YATSApplication;
 import com.github.cjnosal.yats.modules.ApplicationComponent;
-import com.github.cjnosal.yats.network.AuthManager;
-import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.github.cjnosal.yats.slideshow.modules.DaggerSlideshowComponent;
 import com.github.cjnosal.yats.slideshow.modules.SlideshowComponent;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
@@ -35,12 +33,9 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     ViewPager slidePager;
 
     @Inject
-    RedditContentService redditService;
+    SlideshowContract.UserActionListener listener;
 
     @Inject
-    AuthManager authManager;
-
-    SlideshowContract.UserActionListener listener;
     SlideAdapter adapter;
 
     int slidePosition = 0;
@@ -56,7 +51,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         SlideshowComponent slideshowComponent = DaggerSlideshowComponent.builder().applicationComponent(applicationComponent).build();
         slideshowComponent.inject(this);
 
-        adapter = new SlideAdapter(new SlideAdapter.Listener() {
+        adapter.setListener(new SlideAdapter.Listener() {
             @Override
             public void onImageLoaded() {
                 setBackgroundColor();
@@ -66,7 +61,6 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             public void onImageFailed() {
             }
         });
-        slideshowComponent.inject(adapter);
         slidePager.setAdapter(adapter);
         slidePager.setOffscreenPageLimit(4);
 
@@ -96,7 +90,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             }
         });
 
-        listener = new SlideshowPresenter(redditService, authManager, this, savedInstanceState);
+        listener.init(this, savedInstanceState);
         if (savedInstanceState != null) {
             adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);

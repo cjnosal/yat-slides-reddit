@@ -13,12 +13,13 @@ import javax.inject.Singleton;
 import dagger.Component;
 
 @Singleton
-@Component(modules = ApplicationModule.class)
-public interface ApplicationComponent extends ApplicationInjector {
+@Component(modules = {ApplicationModule.class, NetworkModule.class})
+public interface ApplicationComponent {
     Context applicationContext();
+    SharedPreferences sharedPreferences();
+
     RedditContentService redditContentService();
     RedditAuthService redditAuthService();
-    SharedPreferences sharedPreferences();
     AuthManager authManager();
     Picasso picasso();
 }

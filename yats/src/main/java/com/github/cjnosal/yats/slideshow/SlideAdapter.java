@@ -2,7 +2,6 @@ package com.github.cjnosal.yats.slideshow;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
-import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
@@ -19,22 +18,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 public class SlideAdapter extends PagerAdapter {
 
-    @Inject
     Picasso picasso;
 
     private List<String> urls = new LinkedList<>();
     private Map<String, Palette> paletteMap = new HashMap<>();
     private Listener listener;
 
-    public SlideAdapter() {
-        this(null);
+    public SlideAdapter(Picasso picasso) {
+        this.picasso = picasso;
     }
 
-    public SlideAdapter(@Nullable Listener listener) {
+    public void setListener(Listener listener) {
         this.listener = listener;
     }
 

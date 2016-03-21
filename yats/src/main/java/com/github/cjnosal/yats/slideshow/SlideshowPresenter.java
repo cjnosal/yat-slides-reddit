@@ -24,12 +24,14 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
     private static final String DEFAULT_SUB = "pics";
     private static final int NUM_IMAGES = 10;
     private static final String LAST_IMAGE = "last_image";
+    private static final String IS_LAST_PAGE = "is_last_page";
 
     RedditContentService redditService;
     AuthManager authManager;
     SlideshowContract.View view;
 
-    String lastImage;
+    boolean isLastPage = false;
+    String lastImage = null;
 
     public SlideshowPresenter(RedditContentService redditService, AuthManager authManager, SlideshowContract.View view, Bundle bundle) {
         this.redditService = redditService;
@@ -38,7 +40,12 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
 
         if (bundle != null) {
             lastImage = bundle.getString(LAST_IMAGE);
+            isLastPage = bundle.getBoolean(IS_LAST_PAGE);
         }
+    }
+
+    public boolean isLastPage() {
+        return isLastPage;
     }
 
     public void fetchUrls() {
@@ -65,6 +72,7 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
 
     public void onSaveInstanceState(Bundle outState) {
         outState.putString(LAST_IMAGE, lastImage);
+        outState.putBoolean(IS_LAST_PAGE, isLastPage);
     }
 
     private void searchImages() {
@@ -81,8 +89,10 @@ public class SlideshowPresenter implements SlideshowContract.UserActionListener 
                         }
                         String after = subredditSearchResponse.getListingData().getAfter();
                         if (TextUtils.isEmpty(after)) {
+                            isLastPage = true;
                             lastImage = null;
                         } else {
+                            isLastPage = false;
                             lastImage = after;
                         }
                         return Observable.from(urls);

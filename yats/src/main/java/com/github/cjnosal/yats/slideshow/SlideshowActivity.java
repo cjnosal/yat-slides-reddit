@@ -86,7 +86,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
                 slideOffset = 0;
                 setBackgroundColor();
 
-                if (position == (adapter.getCount() - 3)) {
+                if (!listener.isLastPage() && position == (adapter.getCount() - 3)) {
                     listener.fetchUrls();
                 }
             }

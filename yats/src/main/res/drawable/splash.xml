@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <color android:color="?android:attr/colorBackground"/>
+        <color android:color="#fffafafa"/>
     </item>
     <item android:id="@+id/background_icon">
         <bitmap android:src="@android:drawable/ic_menu_slideshow"

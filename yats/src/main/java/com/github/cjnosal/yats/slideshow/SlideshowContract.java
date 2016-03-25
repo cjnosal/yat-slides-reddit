@@ -1,7 +1,5 @@
 package com.github.cjnosal.yats.slideshow;
 
-import android.os.Bundle;
-
 import java.util.List;
 
 public class SlideshowContract {
@@ -11,10 +9,8 @@ public class SlideshowContract {
     }
 
     public interface Presenter {
-        void init(View view, Bundle bundle);
-        boolean isLastPage();
-        void fetchUrls();
-        void onSaveInstanceState(Bundle outState);
+        void init(View view);
+        void findImages();
     }
 
 }

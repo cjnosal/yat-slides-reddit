@@ -1,8 +1,7 @@
 package com.github.cjnosal.yats.slideshow.modules;
 
 import com.github.cjnosal.yats.annotations.ActivityScope;
-import com.github.cjnosal.yats.network.AuthManager;
-import com.github.cjnosal.yats.network.services.RedditContentService;
+import com.github.cjnosal.yats.providers.RedditProvider;
 import com.github.cjnosal.yats.slideshow.SlideAdapter;
 import com.github.cjnosal.yats.slideshow.SlideshowContract;
 import com.github.cjnosal.yats.slideshow.SlideshowPresenter;
@@ -15,8 +14,8 @@ import dagger.Provides;
 public class SlideshowModule {
     @Provides
     @ActivityScope
-    SlideshowContract.Presenter presenter(RedditContentService redditService, AuthManager authManager) {
-        return new SlideshowPresenter(redditService, authManager);
+    SlideshowContract.Presenter presenter(RedditProvider provider) {
+        return new SlideshowPresenter(provider);
     }
 
     @Provides

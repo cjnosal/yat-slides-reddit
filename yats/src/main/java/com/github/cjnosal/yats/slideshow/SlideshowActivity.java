@@ -80,8 +80,8 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
                 slideOffset = 0;
                 setBackgroundColor();
 
-                if (!presenter.isLastPage() && position == (adapter.getCount() - 3)) {
-                    presenter.fetchUrls();
+                if (position == (adapter.getCount() - 3)) {
+                    presenter.findImages();
                 }
             }
 
@@ -90,12 +90,12 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             }
         });
 
-        presenter.init(this, savedInstanceState);
+        presenter.init(this);
         if (savedInstanceState != null) {
             adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
         } else {
-            presenter.fetchUrls();
+            presenter.findImages();
         }
     }
 
@@ -130,6 +130,5 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         super.onSaveInstanceState(outState);
         outState.putInt(CURRENT_SLIDE, slidePager.getCurrentItem());
         outState.putStringArrayList(SLIDES, new ArrayList<>(adapter.getImages()));
-        presenter.onSaveInstanceState(outState);
     }
 }

@@ -33,7 +33,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     ViewPager slidePager;
 
     @Inject
-    SlideshowContract.UserActionListener listener;
+    SlideshowContract.Presenter presenter;
 
     @Inject
     SlideAdapter adapter;
@@ -80,8 +80,8 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
                 slideOffset = 0;
                 setBackgroundColor();
 
-                if (!listener.isLastPage() && position == (adapter.getCount() - 3)) {
-                    listener.fetchUrls();
+                if (!presenter.isLastPage() && position == (adapter.getCount() - 3)) {
+                    presenter.fetchUrls();
                 }
             }
 
@@ -90,12 +90,12 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             }
         });
 
-        listener.init(this, savedInstanceState);
+        presenter.init(this, savedInstanceState);
         if (savedInstanceState != null) {
             adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
         } else {
-            listener.fetchUrls();
+            presenter.fetchUrls();
         }
     }
 
@@ -130,6 +130,6 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         super.onSaveInstanceState(outState);
         outState.putInt(CURRENT_SLIDE, slidePager.getCurrentItem());
         outState.putStringArrayList(SLIDES, new ArrayList<>(adapter.getImages()));
-        listener.onSaveInstanceState(outState);
+        presenter.onSaveInstanceState(outState);
     }
 }

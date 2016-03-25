@@ -10,7 +10,7 @@ public class SlideshowContract {
         void displayImages(List<String> urls);
     }
 
-    public interface UserActionListener {
+    public interface Presenter {
         void init(View view, Bundle bundle);
         boolean isLastPage();
         void fetchUrls();

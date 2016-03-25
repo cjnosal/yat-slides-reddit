@@ -19,7 +19,7 @@ import rx.Subscriber;
 import rx.functions.Func1;
 import timber.log.Timber;
 
-public class SlideshowPresenter implements SlideshowContract.UserActionListener {
+public class SlideshowPresenter implements SlideshowContract.Presenter {
 
     private static final String DEFAULT_SUB = "pics";
     private static final int NUM_IMAGES = 10;

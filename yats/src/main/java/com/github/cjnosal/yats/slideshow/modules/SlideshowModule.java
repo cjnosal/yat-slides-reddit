@@ -15,7 +15,7 @@ import dagger.Provides;
 public class SlideshowModule {
     @Provides
     @ActivityScope
-    SlideshowContract.UserActionListener presenter(RedditContentService redditService, AuthManager authManager) {
+    SlideshowContract.Presenter presenter(RedditContentService redditService, AuthManager authManager) {
         return new SlideshowPresenter(redditService, authManager);
     }
 

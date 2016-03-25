@@ -11,7 +11,7 @@ import dagger.Component;
 @ActivityScope
 @Component(dependencies = ApplicationComponent.class, modules = SlideshowModule.class)
 public interface SlideshowComponent {
-    SlideshowContract.UserActionListener presenter();
+    SlideshowContract.Presenter presenter();
     SlideAdapter adapter();
 
     void inject(SlideshowActivity slideshowActivity);

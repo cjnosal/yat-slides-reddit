@@ -8,6 +8,7 @@ import com.github.cjnosal.yats.network.models.subreddit.Link;
 import com.github.cjnosal.yats.network.models.subreddit.SubredditSearchResponse;
 import com.github.cjnosal.yats.network.services.RedditContentService;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -112,6 +113,9 @@ public class RedditProvider {
         } else if (hasImageExtension(previewUrl)) {
             url = previewUrl;
             Timber.d("Using preview url %s", url);
+        } else if (tryDirectImgurLink(linkUrl)) {
+            url = linkUrl + ".jpg";
+            Timber.d("Trying direct imgur link %s", url);
         } else {
             Timber.d("Skipping %s", linkUrl);
         }
@@ -119,8 +123,21 @@ public class RedditProvider {
         return url;
     }
 
+    private boolean tryDirectImgurLink(String url) {
+        URI uri = URI.create(url);
+        return uri.getHost().contains("imgur.com")
+                && !uri.getPath().contains("/gallery/") // gallery link
+                && !uri.getPath().contains("/a/") // album link
+                && !uri.getPath().contains(","); // list of images
+    }
+
     private boolean hasImageExtension(String url) {
-        return !TextUtils.isEmpty(url) && (url.endsWith("png") || url.endsWith("jpg") || url.endsWith("jpeg"));
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        } else {
+            String lower = url.toLowerCase();
+            return lower.endsWith("png") || lower.endsWith("jpg") || lower.endsWith("jpeg");
+        }
     }
 
     private String getTimeQuery() {

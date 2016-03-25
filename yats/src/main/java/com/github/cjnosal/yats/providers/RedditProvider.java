@@ -52,18 +52,12 @@ public class RedditProvider {
         }
     }
 
-    private Observable<List<String>> getUrlObservable() {
+    private Observable<List<Link>> getLinkObservable() {
         return redditService.searchSubreddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getTimeQuery(), lastImage)
-                .flatMap(new Func1<SubredditSearchResponse, Observable<String>>() {
+                .flatMap(new Func1<SubredditSearchResponse, Observable<Link>>() {
                     @Override
-                    public Observable<String> call(SubredditSearchResponse subredditSearchResponse) {
-                        List<String> urls = new ArrayList<>(subredditSearchResponse.getListingData().getLinks().size());
-                        for (Link link : subredditSearchResponse.getListingData().getLinks()) {
-                            String url = getImageLink(link);
-                            if (!TextUtils.isEmpty(url)) {
-                                urls.add(url);
-                            }
-                        }
+                    public Observable<Link> call(SubredditSearchResponse subredditSearchResponse) {
+
                         String after = subredditSearchResponse.getListingData().getAfter();
                         if (TextUtils.isEmpty(after)) {
                             isLastPage = true;
@@ -72,13 +66,29 @@ public class RedditProvider {
                             isLastPage = false;
                             lastImage = after;
                         }
-                        return Observable.from(urls);
+                        return Observable.from(subredditSearchResponse.getListingData().getLinks());
                     }
                 })
                 .toList();
     }
 
-    private String getImageLink(Link link) {
+    private Observable<List<String>> getUrlObservable() {
+        return getLinkObservable().flatMap(new Func1<List<Link>, Observable<String>>() {
+            @Override
+            public Observable<String> call(List<Link> links) {
+                List<String> urls = new ArrayList<>(links.size());
+                for (Link link : links) {
+                    String url = getImageUrl(link);
+                    if (!TextUtils.isEmpty(url)) {
+                        urls.add(url);
+                    }
+                }
+                return Observable.from(urls);
+            }
+        }).toList();
+    }
+
+    private String getImageUrl(Link link) {
 
         String linkUrl = link.getData().getUrl();
 

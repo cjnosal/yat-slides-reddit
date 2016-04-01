@@ -17,6 +17,7 @@ import javax.inject.Inject;
 
 import rx.Observable;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
 public class RedditProvider {
@@ -55,6 +56,8 @@ public class RedditProvider {
 
     private Observable<List<Link>> getLinkObservable() {
         return redditService.searchSubreddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getTimeQuery(), lastImage)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
                 .flatMap(new Func1<SubredditSearchResponse, Observable<Link>>() {
                     @Override
                     public Observable<Link> call(SubredditSearchResponse subredditSearchResponse) {

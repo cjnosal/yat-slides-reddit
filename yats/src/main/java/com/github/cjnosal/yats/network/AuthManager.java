@@ -19,6 +19,7 @@ import okhttp3.RequestBody;
 import okio.BufferedSink;
 import rx.Observable;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
 @Singleton
@@ -93,6 +94,8 @@ public class AuthManager {
         };
 
         Observable<AuthResponse> authObservable = redditService.oauth2(grantPart, devicePart, authHeader)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
                 .doOnNext(new Action1<AuthResponse>() {
                     @Override
                     public void call(AuthResponse response) {

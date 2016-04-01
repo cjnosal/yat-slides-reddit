@@ -43,8 +43,8 @@ public class NetworkModule {
     private static final int NETWORK_TIMEOUT = 15; // seconds
     private static final String OKHTTP = "OkHttp";
     private static final int CACHE_SIZE = 25 * 1024 * 1024; // 25MB
-    private static final String BASE_CONTENT_URL = "https://oauth.reddit.com";
-    private static final String BASE_AUTH_URL = "https://www.reddit.com";
+    private static final String BASE_CONTENT_URL = "https://oauth.reddit.com/";
+    private static final String BASE_AUTH_URL = "https://www.reddit.com/";
 
     @Provides
     @Singleton

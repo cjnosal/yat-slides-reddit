@@ -2,6 +2,7 @@ package com.github.cjnosal.yats.providers;
 
 import android.text.TextUtils;
 
+import com.github.cjnosal.yats.config.UserSettings;
 import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.models.AuthResponse;
 import com.github.cjnosal.yats.network.models.subreddit.Link;
@@ -31,6 +32,9 @@ public class RedditProvider {
     @Inject
     AuthManager authManager;
 
+    @Inject
+    UserSettings userSettings;
+
     boolean isLastPage = false;
     String lastImage = null;
 
@@ -55,7 +59,7 @@ public class RedditProvider {
     }
 
     private Observable<List<Link>> getLinkObservable() {
-        return redditService.searchSubreddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getTimeQuery(), lastImage)
+        return redditService.searchSubreddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getQuery(), lastImage)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.computation())
                 .flatMap(new Func1<SubredditSearchResponse, Observable<Link>>() {
@@ -70,7 +74,9 @@ public class RedditProvider {
                             isLastPage = false;
                             lastImage = after;
                         }
-                        return Observable.from(subredditSearchResponse.getListingData().getLinks());
+                        List<Link> links = subredditSearchResponse.getListingData().getLinks();
+                        Timber.d("%d Reddit posts found", links.size());
+                        return Observable.from(links);
                     }
                 })
                 .toList();
@@ -87,6 +93,7 @@ public class RedditProvider {
                         urls.add(url);
                     }
                 }
+                Timber.d("%d image urls found", urls.size());
                 return Observable.from(urls);
             }
         }).toList();
@@ -141,6 +148,14 @@ public class RedditProvider {
             String lower = url.toLowerCase();
             return lower.endsWith("png") || lower.endsWith("jpg") || lower.endsWith("jpeg");
         }
+    }
+
+    private String getQuery() {
+        return getTimeQuery() + ' ' + getNsfwQuery();
+    }
+
+    private String getNsfwQuery() {
+        return "nsfw:" + (userSettings.includeNsfw() ? '1' : '0');
     }
 
     private String getTimeQuery() {

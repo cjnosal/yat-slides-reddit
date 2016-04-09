@@ -36,18 +36,37 @@ public class RedditProvider {
     @Inject
     UserSettings userSettings;
 
-    boolean isLastPage = false;
-    String lastImage = null;
+    String lastImage;
+    Calendar startOfDay;
+    Calendar endOfDay;
 
     @Inject
     public RedditProvider() {
+        initDates();
+    }
+
+    private void initDates() {
+        endOfDay = Calendar.getInstance();
+
+        // move forward to midnight
+        endOfDay.add(Calendar.DAY_OF_YEAR, 1);
+        endOfDay.set(Calendar.HOUR_OF_DAY, 0);
+        endOfDay.set(Calendar.MINUTE, 0);
+        endOfDay.set(Calendar.SECOND, 0);
+
+        // subtract a year
+        endOfDay.add(Calendar.YEAR, -1);
+
+        startOfDay = Calendar.getInstance();
+        startOfDay.setTime(endOfDay.getTime());
+
+        // subtract a day
+        startOfDay.add(Calendar.DAY_OF_YEAR, -1);
     }
 
     public Observable<List<String>> getImageUrls() {
 
-        if (isLastPage) {
-            return Observable.empty();
-        } else if (authManager.isAuthenticated()) {
+        if (authManager.isAuthenticated()) {
             return getUrlObservable();
         } else {
             return authManager.fetchAuthToken().flatMap(new Func1<AuthResponse, Observable<List<String>>>() {
@@ -69,10 +88,9 @@ public class RedditProvider {
 
                         String after = subredditSearchResponse.getListingData().getAfter();
                         if (TextUtils.isEmpty(after)) {
-                            isLastPage = true;
+                            moveOneDayBack();
                             lastImage = null;
                         } else {
-                            isLastPage = false;
                             lastImage = after;
                         }
                         List<Link> links = subredditSearchResponse.getListingData().getLinks();
@@ -81,6 +99,11 @@ public class RedditProvider {
                     }
                 })
                 .toList();
+    }
+
+    private void moveOneDayBack() {
+        startOfDay.add(Calendar.DAY_OF_YEAR, -1);
+        endOfDay.add(Calendar.DAY_OF_YEAR, -1);
     }
 
     private Observable<List<String>> getUrlObservable() {
@@ -165,22 +188,9 @@ public class RedditProvider {
     }
 
     private String getTimeQuery() {
-        Calendar calendar = Calendar.getInstance();
+        long endTime = endOfDay.getTimeInMillis() / 1000;
+        long startTime = startOfDay.getTimeInMillis() / 1000;
 
-        // move forward to midnight
-        calendar.add(Calendar.DAY_OF_YEAR, 1);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-
-        // subtract a year
-        calendar.add(Calendar.YEAR, -1);
-        long end = calendar.getTimeInMillis() / 1000;
-
-        // subtract a day
-        calendar.add(Calendar.DAY_OF_YEAR, -1);
-        long start = calendar.getTimeInMillis() / 1000;
-
-        return String.format("timestamp:%1$s..%2$s", start, end);
+        return String.format("timestamp:%1$s..%2$s", startTime, endTime);
     }
 }

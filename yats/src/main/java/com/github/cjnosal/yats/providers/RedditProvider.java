@@ -10,6 +10,7 @@ import com.github.cjnosal.yats.network.models.subreddit.SubredditSearchResponse;
 import com.github.cjnosal.yats.network.services.RedditContentService;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -134,11 +135,16 @@ public class RedditProvider {
     }
 
     private boolean tryDirectImgurLink(String url) {
-        URI uri = URI.create(url);
-        return uri.getHost().contains("imgur.com")
-                && !uri.getPath().contains("/gallery/") // gallery link
-                && !uri.getPath().contains("/a/") // album link
-                && !uri.getPath().contains(","); // list of images
+        try {
+            URI uri = new URI(url);
+            return uri.getHost().contains("imgur.com")
+                    && !uri.getPath().contains("/gallery/") // gallery link
+                    && !uri.getPath().contains("/a/") // album link
+                    && !uri.getPath().contains(","); // list of images
+        } catch (URISyntaxException e) {
+            Timber.e(e, "Unable to parse image link");
+            return false;
+        }
     }
 
     private boolean hasImageExtension(String url) {

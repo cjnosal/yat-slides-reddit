@@ -62,7 +62,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             }
         });
         slidePager.setAdapter(adapter);
-        slidePager.setOffscreenPageLimit(4);
+        slidePager.setOffscreenPageLimit(2);
 
         slidePager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override

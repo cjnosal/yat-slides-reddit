@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import com.github.cjnosal.yats.R;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Request;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ public class SlideAdapter extends PagerAdapter {
 
     private List<String> urls = new LinkedList<>();
     private Map<String, Palette> paletteMap = new HashMap<>();
+    private Map<String, Request> requestMap = new HashMap<>();
     private Listener listener;
 
     public SlideAdapter(Picasso picasso) {
@@ -97,7 +99,10 @@ public class SlideAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
-        container.removeView(((ViewHolder)object).getView());
+        ViewHolder holder = (ViewHolder) object;
+        container.removeView(holder.getView());
+        paletteMap.remove(holder.getUrl());
+        picasso.cancelRequest((ImageView)holder.getView());
     }
 
     @Override

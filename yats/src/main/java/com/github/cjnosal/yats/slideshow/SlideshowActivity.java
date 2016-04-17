@@ -107,15 +107,32 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         TypedValue a = new TypedValue();
         getTheme().resolveAttribute(android.R.attr.colorBackground, a, true);
 
-        @ColorInt int backgroundColor = a.data;
-        if (left != null && right != null) {
-            @ColorInt int leftColor = left.getMutedColor(backgroundColor);
-            @ColorInt int rightColor = right.getMutedColor(backgroundColor);
-            backgroundColor = ColorUtils.blendARGB(leftColor, rightColor, slideOffset);
-        } else if (left != null) {
-            backgroundColor = left.getMutedColor(backgroundColor);
+        @ColorInt int backgroundColor = getColorFromPalettes(left, right, a.data);
+
+        if (backgroundColor == a.data) {
+            Timber.w("Failed to generate swatch for index " + slidePosition);
         }
         getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
+    }
+
+    private @ColorInt int getColorFromPalettes(Palette left, Palette right, @ColorInt int defaultColor) {
+        @ColorInt int leftColor = getColorFromPalette(left, defaultColor);
+        @ColorInt int rightColor = getColorFromPalette(right, defaultColor);
+        return ColorUtils.blendARGB(leftColor, rightColor, slideOffset);
+    }
+
+    private @ColorInt int getColorFromPalette(Palette palette, @ColorInt int defaultColor) {
+        if (palette == null) {
+            return defaultColor;
+        }
+        Palette.Swatch swatch = palette.getMutedSwatch();
+        if (swatch == null) {
+            swatch = palette.getVibrantSwatch();
+        }
+        if (swatch == null) {
+            return defaultColor;
+        }
+        return swatch.getRgb();
     }
 
     @Override

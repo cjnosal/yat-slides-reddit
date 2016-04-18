@@ -74,7 +74,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
             @Override
             public void onPageSelected(int position) {
-                Timber.d("Display %s at position %d", adapter.getImages().get(position), position);
+                Timber.d("Display %s at position %d", adapter.getSlides().get(position).getImageUrl(), position);
 
                 slidePosition = position;
                 slideOffset = 0;
@@ -92,7 +92,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
         presenter.init(this);
         if (savedInstanceState != null) {
-            adapter.setImages(savedInstanceState.getStringArrayList(SLIDES));
+            adapter.setImages((List<Slide>)savedInstanceState.getSerializable(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
         } else {
             presenter.findImages();
@@ -136,9 +136,9 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     }
 
     @Override
-    public void displayImages(List<String> urls) {
-        List<String> adapterImages = adapter.getImages();
-        adapterImages.addAll(urls);
+    public void displayImages(List<Slide> slides) {
+        List<Slide> adapterImages = adapter.getSlides();
+        adapterImages.addAll(slides);
         adapter.setImages(adapterImages);
     }
 
@@ -146,6 +146,6 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(CURRENT_SLIDE, slidePager.getCurrentItem());
-        outState.putStringArrayList(SLIDES, new ArrayList<>(adapter.getImages()));
+        outState.putSerializable(SLIDES, new ArrayList<>(adapter.getSlides()));
     }
 }

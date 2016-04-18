@@ -8,11 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.github.cjnosal.yats.R;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Request;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,9 +23,8 @@ public class SlideAdapter extends PagerAdapter {
 
     Picasso picasso;
 
-    private List<String> urls = new LinkedList<>();
-    private Map<String, Palette> paletteMap = new HashMap<>();
-    private Map<String, Request> requestMap = new HashMap<>();
+    private List<Slide> slides = new LinkedList<>();
+    private Map<Slide, Palette> paletteMap = new HashMap<>();
     private Listener listener;
 
     public SlideAdapter(Picasso picasso) {
@@ -36,26 +35,26 @@ public class SlideAdapter extends PagerAdapter {
         this.listener = listener;
     }
 
-    public void setImages(List<String> urls) {
-        this.urls = urls;
+    public void setImages(List<Slide> slides) {
+        this.slides = slides;
         notifyDataSetChanged();
     }
 
-    public List<String> getImages() {
-        return urls;
+    public List<Slide> getSlides() {
+        return slides;
     }
 
     public Palette getPalette(int position) {
-        if (position >= urls.size()) {
+        if (position >= slides.size()) {
             return null;
         }
-        String url = urls.get(position);
-        return paletteMap.get(url);
+        Slide slide = slides.get(position);
+        return paletteMap.get(slide);
     }
 
     @Override
     public int getCount() {
-        return urls.size();
+        return slides.size();
     }
 
     @Override
@@ -68,16 +67,19 @@ public class SlideAdapter extends PagerAdapter {
         Context context = container.getContext();
         LayoutInflater inflater = (LayoutInflater)context.getSystemService
                 (Context.LAYOUT_INFLATER_SERVICE);
-        final ImageView view = (ImageView) inflater.inflate(R.layout.view_slide, container, false);
-        container.addView(view);
-        final String url = urls.get(position);
-        picasso.load(url).fit().centerInside().into(view, new Callback() {
+        final ViewGroup slideView =  (ViewGroup) inflater.inflate(R.layout.view_slide, container, false);
+        final ImageView imageView = (ImageView) slideView.findViewById(R.id.slide_image);
+        final TextView titleView = (TextView) slideView.findViewById(R.id.slide_title);
+        final Slide slide = slides.get(position);
+        titleView.setText(slide.getTitle());
+        container.addView(slideView);
+        picasso.load(slide.getImageUrl()).fit().centerInside().into(imageView, new Callback() {
             @Override
             public void onSuccess() {
-                Palette.from(((BitmapDrawable)view.getDrawable()).getBitmap()).generate(new Palette.PaletteAsyncListener() {
+                Palette.from(((BitmapDrawable)imageView.getDrawable()).getBitmap()).generate(new Palette.PaletteAsyncListener() {
                     @Override
                     public void onGenerated(Palette palette) {
-                        paletteMap.put(url, palette);
+                        paletteMap.put(slide, palette);
                         if (listener != null) {
                             listener.onImageLoaded();
                         }
@@ -87,28 +89,29 @@ public class SlideAdapter extends PagerAdapter {
 
             @Override
             public void onError() {
-                urls.remove(url);
+                slides.remove(slide);
                 notifyDataSetChanged();
                 if (listener != null) {
                     listener.onImageFailed();
                 }
             }
         });
-        return new ViewHolder(url, view, position);
+
+        return new ViewHolder(slide, slideView, position);
     }
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         ViewHolder holder = (ViewHolder) object;
         container.removeView(holder.getView());
-        paletteMap.remove(holder.getUrl());
-        picasso.cancelRequest((ImageView)holder.getView());
+        paletteMap.remove(holder.getSlide());
+        picasso.cancelRequest((ImageView)holder.getView().findViewById(R.id.slide_image));
     }
 
     @Override
     public int getItemPosition(Object object) {
         ViewHolder v = (ViewHolder)object;
-        int index = urls.indexOf(v.getUrl());
+        int index = slides.indexOf(v.getSlide());
         if (index == -1) {
             return POSITION_NONE;
         } else if (index == v.getPosition()) {
@@ -119,27 +122,26 @@ public class SlideAdapter extends PagerAdapter {
         }
     }
 
-    // TODO post title
     public CharSequence getPageTitle(int position) {
-        return null;
+        return slides.get(position).getTitle();
     }
 
     private class ViewHolder {
-        private String url;
-        private View view;
+        private Slide slide;
+        private ViewGroup view;
         private int position;
 
-        public ViewHolder(String url, View view, int position) {
-            this.url = url;
+        public ViewHolder(Slide slide, ViewGroup view, int position) {
+            this.slide = slide;
             this.view = view;
             this.position = position;
         }
 
-        public String getUrl() {
-            return url;
+        public Slide getSlide() {
+            return slide;
         }
 
-        public View getView() {
+        public ViewGroup getView() {
             return view;
         }
 

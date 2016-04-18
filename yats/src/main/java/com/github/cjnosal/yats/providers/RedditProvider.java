@@ -8,6 +8,7 @@ import com.github.cjnosal.yats.network.models.AuthResponse;
 import com.github.cjnosal.yats.network.models.subreddit.Link;
 import com.github.cjnosal.yats.network.models.subreddit.SubredditSearchResponse;
 import com.github.cjnosal.yats.network.services.RedditContentService;
+import com.github.cjnosal.yats.slideshow.Slide;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -64,15 +65,15 @@ public class RedditProvider {
         startOfDay.add(Calendar.DAY_OF_YEAR, -1);
     }
 
-    public Observable<List<String>> getImageUrls() {
+    public Observable<List<Slide>> getSlides() {
 
         if (authManager.isAuthenticated()) {
-            return getUrlObservable();
+            return getSlideObservable();
         } else {
-            return authManager.fetchAuthToken().flatMap(new Func1<AuthResponse, Observable<List<String>>>() {
+            return authManager.fetchAuthToken().flatMap(new Func1<AuthResponse, Observable<List<Slide>>>() {
                 @Override
-                public Observable<List<String>> call(AuthResponse authResponse) {
-                    return getUrlObservable();
+                public Observable<List<Slide>> call(AuthResponse authResponse) {
+                    return getSlideObservable();
                 }
             });
         }
@@ -106,19 +107,19 @@ public class RedditProvider {
         endOfDay.add(Calendar.DAY_OF_YEAR, -1);
     }
 
-    private Observable<List<String>> getUrlObservable() {
-        return getLinkObservable().flatMap(new Func1<List<Link>, Observable<String>>() {
+    private Observable<List<Slide>> getSlideObservable() {
+        return getLinkObservable().flatMap(new Func1<List<Link>, Observable<Slide>>() {
             @Override
-            public Observable<String> call(List<Link> links) {
-                List<String> urls = new ArrayList<>(links.size());
+            public Observable<Slide> call(List<Link> links) {
+                List<Slide> slides = new ArrayList<>(links.size());
                 for (Link link : links) {
                     String url = getImageUrl(link);
                     if (!TextUtils.isEmpty(url)) {
-                        urls.add(url);
+                        slides.add(new Slide(url, link.getData().getTitle(), link.getData().getSelftext()));
                     }
                 }
-                Timber.d("%d image urls found", urls.size());
-                return Observable.from(urls);
+                Timber.d("%d image urls found", slides.size());
+                return Observable.from(slides);
             }
         }).toList();
     }

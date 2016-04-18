@@ -22,12 +22,12 @@ public class SlideshowPresenter implements SlideshowContract.Presenter {
     }
 
     public void findImages() {
-        redditProvider.getImageUrls()
+        redditProvider.getSlides()
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<List<String>>() {
+                .subscribe(new Action1<List<Slide>>() {
                     @Override
-                    public void call(List<String> urls) {
-                        view.displayImages(urls);
+                    public void call(List<Slide> slides) {
+                        view.displayImages(slides);
                     }
                 });
     }

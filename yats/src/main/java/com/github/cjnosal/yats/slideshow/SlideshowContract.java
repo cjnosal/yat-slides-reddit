@@ -5,7 +5,7 @@ import java.util.List;
 public class SlideshowContract {
 
     public interface View {
-        void displayImages(List<String> urls);
+        void displayImages(List<Slide> urls);
     }
 
     public interface Presenter {

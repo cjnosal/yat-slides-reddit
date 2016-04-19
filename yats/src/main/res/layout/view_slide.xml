@@ -11,6 +11,7 @@
         android:scaleType="fitCenter"/>
 
     <FrameLayout
+        android:id="@+id/slide_title_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 

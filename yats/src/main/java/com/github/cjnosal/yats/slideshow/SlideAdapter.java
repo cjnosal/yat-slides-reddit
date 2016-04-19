@@ -70,9 +70,18 @@ public class SlideAdapter extends PagerAdapter {
         final ViewGroup slideView =  (ViewGroup) inflater.inflate(R.layout.view_slide, container, false);
         final ImageView imageView = (ImageView) slideView.findViewById(R.id.slide_image);
         final TextView titleView = (TextView) slideView.findViewById(R.id.slide_title);
+        final View titleContainer = slideView.findViewById(R.id.slide_title_container);
         final Slide slide = slides.get(position);
         titleView.setText(slide.getTitle());
         container.addView(slideView);
+
+        slideView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                titleContainer.setVisibility(titleContainer.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+            }
+        });
+
         picasso.load(slide.getImageUrl()).fit().centerInside().into(imageView, new Callback() {
             @Override
             public void onSuccess() {

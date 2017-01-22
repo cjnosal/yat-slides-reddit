@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.ContentLoadingProgressBar;
@@ -253,6 +254,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
     @Override
     public void loadFailed() {
         progressBar.hide();
+        Snackbar.make(rootView, R.string.error, Snackbar.LENGTH_SHORT).show();
     }
 
 

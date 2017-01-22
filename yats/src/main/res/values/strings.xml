@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">YATS</string>
+    <string name="subreddit_hint">sub</string>
+    <string name="error">Failed to load images</string>
 </resources>

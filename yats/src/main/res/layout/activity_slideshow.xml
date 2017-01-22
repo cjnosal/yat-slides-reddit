@@ -15,7 +15,7 @@
 
             <EditText
                 android:id="@+id/subreddit_edit_text"
-                android:hint="sub"
+                android:hint="@string/subreddit_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:imeOptions="actionGo"

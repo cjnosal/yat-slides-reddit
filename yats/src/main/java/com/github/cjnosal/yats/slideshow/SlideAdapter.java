@@ -80,13 +80,6 @@ public class SlideAdapter extends PagerAdapter {
         titleView.setText(slide.getTitle());
         container.addView(slideView);
 
-        slideView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                titleContainer.setVisibility(titleContainer.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-            }
-        });
-
         progressBar.show();
         picasso.load(slide.getImageUrl()).fit().centerInside().into(imageView, new Callback() {
             @Override

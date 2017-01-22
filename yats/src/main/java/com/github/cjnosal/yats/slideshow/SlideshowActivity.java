@@ -1,15 +1,22 @@
 package com.github.cjnosal.yats.slideshow;
 
+import android.content.Context;
 import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
+import android.support.design.widget.AppBarLayout;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.graphics.Palette;
 import android.util.TypedValue;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.github.cjnosal.yats.R;
 import com.github.cjnosal.yats.YATSApplication;
@@ -29,14 +36,24 @@ import timber.log.Timber;
 
 public class SlideshowActivity extends RxAppCompatActivity implements SlideshowContract.View {
 
-    public static final String CURRENT_SLIDE = "current_slide";
-    public static final String SLIDES = "slides";
+    private static final String DEFAULT_SUB = "pics";
+    private static final String CURRENT_SLIDE = "current_slide";
+    private static final String SLIDES = "slides";
 
     @Bind(R.id.slide_pager)
     ViewPager slidePager;
 
     @Bind(R.id.slide_progress_bar)
     ContentLoadingProgressBar progressBar;
+
+    @Bind(R.id.root)
+    View rootView;
+
+    @Bind(R.id.app_bar)
+    AppBarLayout appBarLayout;
+
+    @Bind(R.id.subreddit_edit_text)
+    EditText subredditEditText;
 
     @Inject
     SlideshowContract.Presenter presenter;
@@ -46,6 +63,8 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
     int slidePosition = 0;
     float slideOffset = 0;
+
+    String subreddit = DEFAULT_SUB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +106,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
                 setBackgroundColor();
 
                 if (position == (adapter.getCount() - 3)) {
-                    loadImages();
+                    loadImages(false);
                 }
             }
 
@@ -96,32 +115,86 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             }
         });
 
+        getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            @Override
+            public void onSystemUiVisibilityChange(int visibility) {
+                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                    appBarLayout.setVisibility(View.VISIBLE);
+                    subredditEditText.requestFocus();
+                    subredditEditText.setSelection(0, subredditEditText.getText().length());
+                    leaveImmersiveMode();
+                } else {
+                    appBarLayout.setVisibility(View.GONE);
+                    enterImmersiveMode();
+                }
+            }
+        });
+
+        subredditEditText.setText(DEFAULT_SUB);
+        subredditEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                subreddit = v.getText().toString();
+                loadImages(true);
+                enterImmersiveMode();
+                return false;
+            }
+        });
+
+        subredditEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    subredditEditText.setText("");
+                }
+            }
+        });
+
+        slidePager.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
+                    enterImmersiveMode();
+                }
+                return false;
+            }
+        });
+
         presenter.init(this);
         if (savedInstanceState != null) {
             adapter.setImages((List<Slide>)savedInstanceState.getSerializable(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
         } else {
-            loadImages();
+            loadImages(true);
         }
     }
 
-    private void loadImages() {
-        presenter.findImages();
+    private void loadImages(boolean reset) {
+        presenter.findImages(subreddit, reset);
         progressBar.show();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        enterImmersiveMode();
+    }
 
+    private void enterImmersiveMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
+        }
+    }
+
+    private void leaveImmersiveMode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_VISIBLE);
         }
     }
 
@@ -164,6 +237,13 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
     @Override
     public void displayImages(List<Slide> slides) {
+        adapter.setImages(slides);
+        slidePager.setCurrentItem(0, false);
+        progressBar.hide();
+    }
+
+    @Override
+    public void addImages(List<Slide> slides) {
         List<Slide> adapterImages = adapter.getSlides();
         adapterImages.addAll(slides);
         adapter.setImages(adapterImages);

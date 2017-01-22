@@ -22,7 +22,6 @@ import timber.log.Timber;
 
 public class SlideshowPresenter implements SlideshowContract.Presenter {
 
-    private static final String DEFAULT_SUB = "pics";
     private static final int NUM_IMAGES = 10;
 
     private RedditProvider redditProvider;
@@ -45,8 +44,12 @@ public class SlideshowPresenter implements SlideshowContract.Presenter {
         this.view = view;
     }
 
-    public void findImages() {
-        redditProvider.searchSubreddit(DEFAULT_SUB, NUM_IMAGES, startOfDay, endOfDay, lastImage)
+    public void findImages(final String subreddit, final boolean reset) {
+        if (reset) {
+            initDates();
+            lastImage = null;
+        }
+        redditProvider.searchSubreddit(subreddit, NUM_IMAGES, startOfDay, endOfDay, lastImage)
                 .observeOn(Schedulers.computation())
                 .doOnNext(new Action1<SubredditSearchResponse>() {
                     @Override
@@ -97,7 +100,11 @@ public class SlideshowPresenter implements SlideshowContract.Presenter {
                     @Override
                     public void onNext(List<Slide> slides) {
                         Timber.d("%d image urls found", slides.size());
-                        view.displayImages(slides);
+                        if (reset) {
+                            view.displayImages(slides);
+                        } else {
+                            view.addImages(slides);
+                        }
                     }
                 });
     }

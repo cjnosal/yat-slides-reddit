@@ -3,9 +3,6 @@ package com.github.cjnosal.yats.modules;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.github.cjnosal.yats.config.UserSettings;
-import com.github.cjnosal.yats.providers.RedditProvider;
-
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -32,17 +29,5 @@ public class ApplicationModule {
     @Singleton
     SharedPreferences providesSharedPreferences() {
         return applicationContext.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
-    }
-
-    @Provides
-    @Singleton
-    RedditProvider providesRedditProvider() {
-        return new RedditProvider();
-    }
-
-    @Provides
-    @Singleton
-    UserSettings providesUserSettings(SharedPreferences preferences) {
-        return new UserSettings(preferences);
     }
 }

@@ -12,6 +12,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import okhttp3.MediaType;
@@ -38,6 +39,7 @@ public class AuthManager {
     String accessToken;
     Date expiry;
 
+    @Inject
     public AuthManager(RedditAuthService redditService, SharedPreferences preferences) {
         this.redditService = redditService;
         this.preferences = preferences;

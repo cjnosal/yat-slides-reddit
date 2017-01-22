@@ -19,6 +19,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 public class SlideAdapter extends PagerAdapter {
 
     Picasso picasso;
@@ -27,6 +29,7 @@ public class SlideAdapter extends PagerAdapter {
     private Map<Slide, Palette> paletteMap = new HashMap<>();
     private Listener listener;
 
+    @Inject
     public SlideAdapter(Picasso picasso) {
         this.picasso = picasso;
     }

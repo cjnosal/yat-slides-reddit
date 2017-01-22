@@ -1,11 +1,9 @@
 package com.github.cjnosal.yats.modules;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 
 import com.github.cjnosal.yats.BuildConfig;
-import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.services.RedditAuthService;
 import com.github.cjnosal.yats.network.services.RedditContentService;
 import com.google.gson.Gson;
@@ -45,12 +43,6 @@ public class NetworkModule {
     private static final int CACHE_SIZE = 25 * 1024 * 1024; // 25MB
     private static final String BASE_CONTENT_URL = "https://oauth.reddit.com/";
     private static final String BASE_AUTH_URL = "https://www.reddit.com/";
-
-    @Provides
-    @Singleton
-    AuthManager providesAuthManager(RedditAuthService redditService, SharedPreferences sharedPreferences) {
-        return new AuthManager(redditService, sharedPreferences);
-    }
 
     @Singleton
     @Provides

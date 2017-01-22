@@ -1,197 +1,66 @@
 package com.github.cjnosal.yats.providers;
 
-import android.text.TextUtils;
-
 import com.github.cjnosal.yats.config.UserSettings;
 import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.models.AuthResponse;
-import com.github.cjnosal.yats.network.models.subreddit.Link;
 import com.github.cjnosal.yats.network.models.subreddit.SubredditSearchResponse;
 import com.github.cjnosal.yats.network.services.RedditContentService;
-import com.github.cjnosal.yats.slideshow.Slide;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 import javax.inject.Inject;
 
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
-import timber.log.Timber;
 
 public class RedditProvider {
 
-    private static final String DEFAULT_SUB = "pics";
-    private static final int NUM_IMAGES = 10;
+    private RedditContentService redditService;
+    private AuthManager authManager;
+    private UserSettings userSettings;
 
     @Inject
-    RedditContentService redditService;
-
-    @Inject
-    AuthManager authManager;
-
-    @Inject
-    UserSettings userSettings;
-
-    String lastImage;
-    Calendar startOfDay;
-    Calendar endOfDay;
-
-    @Inject
-    public RedditProvider() {
-        initDates();
+    public RedditProvider(RedditContentService redditService, AuthManager authManager, UserSettings userSettings) {
+        this.redditService = redditService;
+        this.authManager = authManager;
+        this.userSettings = userSettings;
     }
 
-    private void initDates() {
-        endOfDay = Calendar.getInstance();
-
-        // move forward to midnight
-        endOfDay.add(Calendar.DAY_OF_YEAR, 1);
-        endOfDay.set(Calendar.HOUR_OF_DAY, 0);
-        endOfDay.set(Calendar.MINUTE, 0);
-        endOfDay.set(Calendar.SECOND, 0);
-
-        // subtract a year
-        endOfDay.add(Calendar.YEAR, -1);
-
-        startOfDay = Calendar.getInstance();
-        startOfDay.setTime(endOfDay.getTime());
-
-        // subtract a day
-        startOfDay.add(Calendar.DAY_OF_YEAR, -1);
-    }
-
-    public Observable<List<Slide>> getSlides() {
-
+    public Observable<SubredditSearchResponse> searchSubreddit(final String subreddit, final int numImages, final Calendar startTime, final Calendar endTime, final String lastImage) {
         if (authManager.isAuthenticated()) {
-            return getSlideObservable();
+            return search(subreddit, numImages, startTime, endTime, lastImage);
         } else {
-            return authManager.fetchAuthToken().flatMap(new Func1<AuthResponse, Observable<List<Slide>>>() {
+            return authManager.fetchAuthToken().flatMap(new Func1<AuthResponse, Observable<SubredditSearchResponse>>() {
                 @Override
-                public Observable<List<Slide>> call(AuthResponse authResponse) {
-                    return getSlideObservable();
+                public Observable<SubredditSearchResponse> call(AuthResponse authResponse) {
+                    return search(subreddit, numImages, startTime, endTime, lastImage);
                 }
             });
         }
     }
 
-    private Observable<List<Link>> getLinkObservable() {
-        return redditService.searchSubreddit(authManager.getOauthHeader(), DEFAULT_SUB, NUM_IMAGES, getQuery(), lastImage)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.computation())
-                .flatMap(new Func1<SubredditSearchResponse, Observable<Link>>() {
-                    @Override
-                    public Observable<Link> call(SubredditSearchResponse subredditSearchResponse) {
-
-                        String after = subredditSearchResponse.getListingData().getAfter();
-                        if (TextUtils.isEmpty(after)) {
-                            moveOneDayBack();
-                            lastImage = null;
-                        } else {
-                            lastImage = after;
-                        }
-                        List<Link> links = subredditSearchResponse.getListingData().getLinks();
-                        Timber.d("%d Reddit posts found", links.size());
-                        return Observable.from(links);
-                    }
-                })
-                .toList();
+    private Observable<SubredditSearchResponse> search(final String subreddit, final int numImages, final Calendar startTime, final Calendar endTime, final String lastImage) {
+        return redditService.searchSubreddit(authManager.getOauthHeader(), subreddit, numImages, getQuery(startTime, endTime), lastImage)
+                .subscribeOn(Schedulers.io());
     }
 
-    private void moveOneDayBack() {
-        startOfDay.add(Calendar.DAY_OF_YEAR, -1);
-        endOfDay.add(Calendar.DAY_OF_YEAR, -1);
-    }
-
-    private Observable<List<Slide>> getSlideObservable() {
-        return getLinkObservable().flatMap(new Func1<List<Link>, Observable<Slide>>() {
-            @Override
-            public Observable<Slide> call(List<Link> links) {
-                List<Slide> slides = new ArrayList<>(links.size());
-                for (Link link : links) {
-                    String url = getImageUrl(link);
-                    if (!TextUtils.isEmpty(url)) {
-                        slides.add(new Slide(url, link.getData().getTitle(), link.getData().getSelftext()));
-                    }
-                }
-                Timber.d("%d image urls found", slides.size());
-                return Observable.from(slides);
-            }
-        }).toList();
-    }
-
-    private String getImageUrl(Link link) {
-
-        String linkUrl = link.getData().getUrl();
-
-        String mediaUrl = null;
-        if (link.getData().getMedia() != null) {
-            mediaUrl = link.getData().getMedia().getOembed().getThumbnailUrl();
+    private String getQuery(final Calendar startTime, final Calendar endTime) {
+        String query = getNsfwQuery();
+        if (startTime != null && endTime != null) {
+            query += ' ' + getTimeQuery(startTime, endTime);
         }
-
-        String previewUrl = null;
-        if (link.getData().getPreview() != null) {
-            previewUrl = link.getData().getPreview().getImages().get(0).getSource().getUrl();
-        }
-
-        String url = null;
-        if (hasImageExtension(linkUrl)) {
-            url = linkUrl;
-            Timber.d("Using link url  %s", url);
-        } else if (hasImageExtension(mediaUrl)) {
-            url = mediaUrl;
-            Timber.d("Using media url %s", url);
-        } else if (hasImageExtension(previewUrl)) {
-            url = previewUrl;
-            Timber.d("Using preview url %s", url);
-        } else if (tryDirectImgurLink(linkUrl)) {
-            url = linkUrl + ".jpg";
-            Timber.d("Trying direct imgur link %s", url);
-        } else {
-            Timber.d("Skipping %s", linkUrl);
-        }
-
-        return url;
-    }
-
-    private boolean tryDirectImgurLink(String url) {
-        try {
-            URI uri = new URI(url);
-            return uri.getHost().contains("imgur.com")
-                    && !uri.getPath().contains("/gallery/") // gallery link
-                    && !uri.getPath().contains("/a/") // album link
-                    && !uri.getPath().contains(","); // list of images
-        } catch (URISyntaxException e) {
-            Timber.e(e, "Unable to parse image link");
-            return false;
-        }
-    }
-
-    private boolean hasImageExtension(String url) {
-        if (TextUtils.isEmpty(url)) {
-            return false;
-        } else {
-            String lower = url.toLowerCase();
-            return lower.endsWith("png") || lower.endsWith("jpg") || lower.endsWith("jpeg");
-        }
-    }
-
-    private String getQuery() {
-        return getTimeQuery() + ' ' + getNsfwQuery();
+        return query;
     }
 
     private String getNsfwQuery() {
         return "nsfw:" + (userSettings.includeNsfw() ? '1' : '0');
     }
 
-    private String getTimeQuery() {
-        long endTime = endOfDay.getTimeInMillis() / 1000;
-        long startTime = startOfDay.getTimeInMillis() / 1000;
+    private String getTimeQuery(Calendar startTime, Calendar endTime) {
+        long endTimeSeconds = endTime.getTimeInMillis() / 1000;
+        long startTimeSeconds = startTime.getTimeInMillis() / 1000;
 
-        return String.format("timestamp:%1$s..%2$s", startTime, endTime);
+        return String.format("timestamp:%1$s..%2$s", startTimeSeconds, endTimeSeconds);
     }
 }

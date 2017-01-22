@@ -3,7 +3,6 @@ package com.github.cjnosal.yats.modules;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.github.cjnosal.yats.config.UserSettings;
 import com.github.cjnosal.yats.network.AuthManager;
 import com.github.cjnosal.yats.network.services.RedditAuthService;
 import com.github.cjnosal.yats.network.services.RedditContentService;
@@ -16,12 +15,15 @@ import dagger.Component;
 @Singleton
 @Component(modules = {ApplicationModule.class, NetworkModule.class})
 public interface ApplicationComponent {
+    // ApplicationModule
     Context applicationContext();
     SharedPreferences sharedPreferences();
-    UserSettings userSettings();
 
+    // NetworkModule
     RedditContentService redditContentService();
     RedditAuthService redditAuthService();
-    AuthManager authManager();
     Picasso picasso();
+
+    // SlideshowModule workaround for scoping difference?
+    AuthManager authManager();
 }

@@ -1,6 +1,5 @@
 package com.github.cjnosal.yats.slideshow;
 
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
@@ -129,7 +128,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         if (backgroundColor == a.data) {
             Timber.w("Failed to generate swatch for index " + slidePosition);
         }
-        getWindow().setBackgroundDrawable(new ColorDrawable(backgroundColor));
+        slidePager.setBackgroundColor(backgroundColor);
     }
 
     private @ColorInt int getColorFromPalettes(Palette left, Palette right, @ColorInt int defaultColor) {

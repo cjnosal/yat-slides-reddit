@@ -6,6 +6,7 @@ public class SlideshowContract {
 
     public interface View {
         void displayImages(List<Slide> urls);
+        void loadFailed();
     }
 
     public interface Presenter {

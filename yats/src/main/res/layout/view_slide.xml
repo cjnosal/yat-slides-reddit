@@ -31,4 +31,12 @@
             android:padding="8dp"
             tools:text="Title"/>
     </FrameLayout>
+
+    <android.support.v4.widget.ContentLoadingProgressBar
+        android:id="@+id/slide_image_progress_bar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:layout_gravity="center"/>
 </FrameLayout>

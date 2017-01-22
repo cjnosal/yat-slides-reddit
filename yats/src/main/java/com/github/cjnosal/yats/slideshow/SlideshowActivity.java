@@ -1,10 +1,12 @@
 package com.github.cjnosal.yats.slideshow;
 
+import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.graphics.Palette;
 import android.util.TypedValue;
 import android.view.View;
@@ -32,6 +34,9 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
 
     @Bind(R.id.slide_pager)
     ViewPager slidePager;
+
+    @Bind(R.id.slide_progress_bar)
+    ContentLoadingProgressBar progressBar;
 
     @Inject
     SlideshowContract.Presenter presenter;
@@ -82,7 +87,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
                 setBackgroundColor();
 
                 if (position == (adapter.getCount() - 3)) {
-                    presenter.findImages();
+                    loadImages();
                 }
             }
 
@@ -96,8 +101,13 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             adapter.setImages((List<Slide>)savedInstanceState.getSerializable(SLIDES));
             slidePager.setCurrentItem(savedInstanceState.getInt(CURRENT_SLIDE), false);
         } else {
-            presenter.findImages();
+            loadImages();
         }
+    }
+
+    private void loadImages() {
+        presenter.findImages();
+        progressBar.show();
     }
 
     @Override
@@ -129,6 +139,7 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
             Timber.w("Failed to generate swatch for index " + slidePosition);
         }
         slidePager.setBackgroundColor(backgroundColor);
+        progressBar.getIndeterminateDrawable().setColorFilter(backgroundColor, PorterDuff.Mode.SRC_IN);
     }
 
     private @ColorInt int getColorFromPalettes(Palette left, Palette right, @ColorInt int defaultColor) {
@@ -156,7 +167,14 @@ public class SlideshowActivity extends RxAppCompatActivity implements SlideshowC
         List<Slide> adapterImages = adapter.getSlides();
         adapterImages.addAll(slides);
         adapter.setImages(adapterImages);
+        progressBar.hide();
     }
+
+    @Override
+    public void loadFailed() {
+        progressBar.hide();
+    }
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

@@ -3,6 +3,7 @@ package com.github.cjnosal.yats.slideshow;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.view.PagerAdapter;
+import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -74,6 +75,7 @@ public class SlideAdapter extends PagerAdapter {
         final ImageView imageView = (ImageView) slideView.findViewById(R.id.slide_image);
         final TextView titleView = (TextView) slideView.findViewById(R.id.slide_title);
         final View titleContainer = slideView.findViewById(R.id.slide_title_container);
+        final ContentLoadingProgressBar progressBar = (ContentLoadingProgressBar) slideView.findViewById(R.id.slide_image_progress_bar);
         final Slide slide = slides.get(position);
         titleView.setText(slide.getTitle());
         container.addView(slideView);
@@ -85,9 +87,11 @@ public class SlideAdapter extends PagerAdapter {
             }
         });
 
+        progressBar.show();
         picasso.load(slide.getImageUrl()).fit().centerInside().into(imageView, new Callback() {
             @Override
             public void onSuccess() {
+                progressBar.hide();
                 Palette.from(((BitmapDrawable)imageView.getDrawable()).getBitmap()).generate(new Palette.PaletteAsyncListener() {
                     @Override
                     public void onGenerated(Palette palette) {
@@ -101,6 +105,7 @@ public class SlideAdapter extends PagerAdapter {
 
             @Override
             public void onError() {
+                progressBar.hide();
                 slides.remove(slide);
                 notifyDataSetChanged();
                 if (listener != null) {

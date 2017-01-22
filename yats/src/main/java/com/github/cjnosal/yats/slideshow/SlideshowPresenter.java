@@ -91,6 +91,7 @@ public class SlideshowPresenter implements SlideshowContract.Presenter {
                     @Override
                     public void onError(Throwable e) {
                         Timber.e(e, "Failed to get slides");
+                        view.loadFailed();
                     }
 
                     @Override
